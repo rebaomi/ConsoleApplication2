@@ -2,7 +2,7 @@
 //
 //   GrabCut in One Cut(基于图割算法grabcut的一次快速图像分割的OpenCV实现)----目前效果最好的图割
 //   参考：http://blog.csdn.net/wangyaninglm/article/details/50074613
-// opencv版本是2.413   2413
+// opencv版本是2.413   2413  
 
 #include "stdafx.h"
 //  
