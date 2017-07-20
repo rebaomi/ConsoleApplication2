@@ -65,7 +65,7 @@
 //#include <opencv2/imgproc/imgproc.hpp>  // Gaussian Blur  
 #include <opencv2/core/core.hpp>        // Basic OpenCV structures (cv::Mat, Scalar)  
 #include <opencv2/highgui/highgui.hpp>  // OpenCV window I/O  
-
+#include "opencv2/imgproc/imgproc.hpp"  
 #include "graph.h"  
 #include "ComputeTime.h"  
 
@@ -271,9 +271,11 @@ int main(int argc, char *argv[])
 				else
 				{
 					segMask.at<uchar>(i / inputImg.cols, i%inputImg.cols) = 0;
-					(uchar)segShowImg.at<Vec3b>(i / inputImg.cols, i%inputImg.cols)[0] = 0;
-					(uchar)segShowImg.at<Vec3b>(i / inputImg.cols, i%inputImg.cols)[1] = 0;
-					(uchar)segShowImg.at<Vec3b>(i / inputImg.cols, i%inputImg.cols)[2] = 0;
+					(uchar)segShowImg.at<Vec4b>(i / inputImg.cols, i%inputImg.cols)[0] = 0;
+					(uchar)segShowImg.at<Vec4b>(i / inputImg.cols, i%inputImg.cols)[1] = 0;
+					(uchar)segShowImg.at<Vec4b>(i / inputImg.cols, i%inputImg.cols)[2] = 0;
+					(uchar)segShowImg.at<Vec4b>(i / inputImg.cols, i%inputImg.cols)[3] = 0;
+					
 				}
 			}
 
@@ -397,7 +399,10 @@ void destroyAll()
 int init(char * imgFileName)
 {
 	// Read the file  
-	inputImg = imread(imgFileName, CV_LOAD_IMAGE_COLOR);
+	//inputImg = imread(imgFileName, CV_LOAD_IMAGE_COLOR);
+	Mat oriInputImg = imread(imgFileName, CV_LOAD_IMAGE_UNCHANGED);
+	//inputImg = imread(imgFileName, CV_LOAD_IMAGE_UNCHANGED);
+	cvtColor(oriInputImg, inputImg, CV_RGB2RGBA);
 	showImg = inputImg.clone();
 	segShowImg = inputImg.clone();
 
@@ -468,7 +473,7 @@ int init(char * imgFileName)
 
 	GraphType::node_id currNodeId = myGraph->add_node((int)inputImg.cols * inputImg.rows + numUsedBins);
 
-
+	cout << inputImg.cols << endl;
 	//#pragma omp parallel for  
 	for (int i = 0; i<inputImg.rows; i++)
 	{
@@ -485,9 +490,10 @@ int init(char * imgFileName)
 				myGraph->add_tweights(currNodeId, 0, (int)ceil(INT32_CONST * HARD_CONSTRAINT_CONST + 0.5));
 
 			// You can now access the pixel value with cv::Vec3b  
-			float b = (float)inputImg.at<Vec3b>(i, j)[0];
-			float g = (float)inputImg.at<Vec3b>(i, j)[1];
-			float r = (float)inputImg.at<Vec3b>(i, j)[2];
+			float b = (float)inputImg.at<Vec4b>(i, j)[0];
+			float g = (float)inputImg.at<Vec4b>(i, j)[1];
+			float r = (float)inputImg.at<Vec4b>(i, j)[2];
+			float a = (float)inputImg.at<Vec4b>(i, j)[3];
 
 			// go over the neighbors  
 			for (int si = -NEIGHBORHOOD; si <= NEIGHBORHOOD && si + i < inputImg.rows && si + i >= 0; si++)
@@ -501,7 +507,6 @@ int init(char * imgFileName)
 
 					// this is the node id for the neighbor  
 					GraphType::node_id nNodeId = (i + si) * inputImg.cols + (j + sj);
-
 					float nb = (float)inputImg.at<Vec3b>(i + si, j + sj)[0];
 					float ng = (float)inputImg.at<Vec3b>(i + si, j + sj)[1];
 					float nr = (float)inputImg.at<Vec3b>(i + si, j + sj)[2];
